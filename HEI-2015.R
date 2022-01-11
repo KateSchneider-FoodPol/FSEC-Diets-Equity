@@ -1,15 +1,17 @@
 ########################################
-# NHANES HEI Scores for FSEC Diet Paper
-# Last updated: 12/16/2021
-# User: ALB
+# Calculate HEI-2015 from NHANES Data
+# Last updated: 1/10/2021
+# Created by: Alexa Bellows
 #######################################
 
-#Alexa's Library
-setwd("Documents/Hopkins/Fanzo/Papers/FSEC Diet Paper/")
+# Library
+setwd("C:/Users/kates/OneDrive - Johns Hopkins/FSEC/Diets & equity/FSEC Diets & Equity Shared Folder/Data/NHANES 2017-2018 Raw data")
 
 #Libraries
-  #devtools::install_github("timfolsom/hei")
-  #library(hei) - https://github.com/timfolsom/hei - old package used to calculate old HEI 
+install.packages("devtools")
+devtools::install_github("timfolsom/hei")
+library(hei) 
+    #https://github.com/timfolsom/hei - old package used to calculate old HEI 
     #Adapted code from this package to calculate HEI 2015 with NHANES Data from 2017/2018
   
   library(tidyverse)
@@ -373,3 +375,6 @@ dat$HEI <- dat$heiveg + dat$heibngrn + dat$heitotfrt + dat$heiwholefrt + dat$hei
 dat<-dat %>% filter(RIDAGEYR>2)
 summary(dat$HEI)
 
+# Export the data
+setwd("C:/Users/kates/OneDrive - Johns Hopkins/FSEC/Diets & equity/FSEC Diets & Equity Shared Folder/Analysis")
+write.csv(dat,file="HEI1718.csv")

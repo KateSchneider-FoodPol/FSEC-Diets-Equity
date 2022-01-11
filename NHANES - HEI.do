@@ -4,7 +4,6 @@
 // Link to all NHANES datasets: https://wwwn.cdc.gov/nchs/nhanes/default.aspx
 // Code credits:
 	* NHANES general: Tim Plante https://blog.uvm.edu/tbplante/2018/03/02/downloading-and-analyzing-nhanes-datasets-with-stata-in-a-single-do-file/
-	* HEI: Darci Davis https://dukespace.lib.duke.edu/dspace/bitstream/handle/10161/23183/Davis_duke_0066N_16220.pdf?sequence=1&isAllowed=y
 
 // Part 1: Data management
 global myfiles "C:\Users\kates\OneDrive - Johns Hopkins\FSEC\Diets & equity\FSEC Diets & Equity Shared Folder"
@@ -16,6 +15,18 @@ cd "$myfiles$analysis"
 import sasxport5 "https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.XPT", clear
 sort seqn // seqn = unique identifier 
 save DEMO_J, replace
+
+* HEI-2015
+import delimited using "HEI1718.csv", clear
+sort seqn
+sum
+save HEI1718, replace
+
+use DEMO_J, clear
+sum
+merge 1:1 seqn using HEI1718
+drop if _merge!=3
+drop _merge
 
 * Dietary data (foods)
 	// Technical support file - food codes
