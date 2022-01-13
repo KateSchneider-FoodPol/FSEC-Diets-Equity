@@ -48,5 +48,9 @@ lab var incpovratgrp "Ratio of household income to poverty line"
 
 save NHANES_HEI_20172018, replace
 
-graph box hei if ridageyr>=18, over(ridreth3) over(incpovratgrp) asyvars legend(size(small) col(3) symxsize(3)) ytitle("Healthy Eating Index (HEI-2015)", size(small)) b1title("Ratio of household income to poverty line", size(small)) noouts note("") 
-graph export "Fig1.png", replace
+use NHANES_HEI_20172018, clear
+epctile hei if ridageyr>=18 & hei!=. [pw=wtmec2yr], percentiles(50)
+graph box hei if ridageyr>=18 & hei!=. [pw=wtmec2yr], over(ridreth3) over(incpovratgrp, gap(*3)) asyvars legend(size(small) col(3) symxsize(3)) ytitle("Healthy Eating Index (HEI-2015)", size(small)) b1title("Ratio of household income to poverty line", size(small)) noouts note("") yline(51, lcolor(gray))
+graph export "Fig2.png", replace
+
+table ridreth3 incpovratgrp if ridageyr>=18 & hei!=.
