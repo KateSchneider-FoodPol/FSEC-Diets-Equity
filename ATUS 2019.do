@@ -1,12 +1,16 @@
 * Kate Schneider
+* Replication files for "Inequities in access to healthy diets" - ATUS
+* Figure 2
+* Supplementary tables 3, 5 & 6
 
 
 // Part 1 // Housekeeping
 * Working directory
-global myfiles "C:\Users\kschne29\OneDrive - Johns Hopkins\FSEC\Diets & equity\FSEC Diets & Equity Shared Folder"
-global analysis "\Analysis"
+global myfiles "C:\Users\Kate S\OneDrive - Johns Hopkins\FSEC\Diets & equity\FSEC Diets & Equity Shared Folder"
 global data "\Data\2019 ATUS"
-cd "$myfiles"
+global analysis "\Analysis"
+global saveto "\Revised_Frontiers submission"
+cd "$myfiles$analysis"
 
 // Part 2 // Data management
 
@@ -3279,8 +3283,7 @@ drop _merge
 destring, replace
 save "$myfiles$data\ATUS2019", replace
 
-**# Bookmark #2
-// PART 3 // Figure 3
+//#  Figure 2
 use "$myfiles$data\ATUS2019", clear
 describe 
 * Survey weight var: tufinlwgt
@@ -3322,8 +3325,11 @@ lab def sex 0 "Male" 1 "Female"
 lab val sex sex
 
 graph bar food work sleep carehouse if telfs==1 & trdpftpt==1 [pw=tufinlwgt],  over(race, label(labsize(vsmall) angle(45))) over(sex, label(labsize(medsmall))) stack ylabel(, labsize(vsmall)) ytitle("Minutes", size(medsmall)) legend(label(1 "All food-related activities") label(2 "Working") label(3 "Sleeping") label(4 "Caregiving & household work") size(small) symysize(1) symxsize(3) placement(12) span margin(tiny) rowgap(*.5) row(1)) graphregion(margin(tiny))
-graph export "$myfiles$analysis\Fig 3_ATUS2019.png", replace
+graph export "$myfiles$saveto\Fig 2.jpg", replace
 sum food work sleep carehouse if telfs==1 & trdpftpt==1
+
+
+//# Supplementary Materials tables 5 & 6
 
 misstable sum race sex telfs teage trdpftpt food work sleep
 table telfs race sex if teage>=18 & teage<=64 & trdpftpt==1
@@ -3345,11 +3351,11 @@ eststo mwork: svy: mean work if telfs==1 & trdpftpt==1, over(sex)
 eststo msleep: svy: mean sleep if telfs==1 & trdpftpt==1, over(sex)
 eststo mcarehouse: svy: mean carehouse if telfs==1 & trdpftpt==1, over(sex)
 
-esttab mfood mwork msleep mcarehouse using "$myfiles$analysis\Supp Mat Table 4", label ci(%9.1f) rtf replace note("Population statistics calculated with sampling weights.")
+esttab mfood mwork msleep mcarehouse using "$myfiles$analysis\Supp Mat Table 5", label ci(%9.1f) rtf replace note("Population statistics calculated with sampling weights.")
 
 eststo food: svy, subpop(if telfs==1 & trdpftpt==1): reg food sex##race 
 eststo work: svy, subpop(if telfs==1 & trdpftpt==1): reg work sex##race 
 eststo sleep: svy, subpop(if telfs==1 & trdpftpt==1): reg sleep sex##race 
 eststo carehouse: svy, subpop(if telfs==1 & trdpftpt==1): reg carehouse sex##race 
 
-esttab food work sleep carehouse using "$myfiles$analysis\Supp Mat Table 5", label p(%9.3f) rtf replace note("White-only males are the reference category. Population statistics calculated with sampling weights.")
+esttab food work sleep carehouse using "$myfiles$analysis\Supp Mat Table 6", label p(%9.3f) rtf replace note("White-only males are the reference category. Population statistics calculated with sampling weights.")

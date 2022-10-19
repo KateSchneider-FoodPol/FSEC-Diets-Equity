@@ -1,13 +1,17 @@
 * Kate Schneider
-* Download NHANES dietary and demographic data, calculate HEI
+* Replication files for "Inequities in access to healthy diets" - NHANES
+* Table 1 & 2
+* Figure 1
+* Supplementary tables 1 & 2
 
 // Link to all NHANES datasets: https://wwwn.cdc.gov/nchs/nhanes/default.aspx
 // Codebook for demographics: https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.htm
 
 // Part 1: Data management
-global myfiles "C:\Users\kschne29\OneDrive - Johns Hopkins\FSEC\Diets & equity\FSEC Diets & Equity Shared Folder"
-global data "\Data"
+global myfiles "C:\Users\Kate S\OneDrive - Johns Hopkins\FSEC\Diets & equity\FSEC Diets & Equity Shared Folder"
+global data "\Data\NHANES 2017-2018 Raw data"
 global analysis "\Analysis"
+global saveto "\Revised_Frontiers submission"
 cd "$myfiles$analysis"
 
 * Demographics
@@ -134,8 +138,7 @@ keep if ridageyr>=18
 
 save NHANES_HEI_20172018, replace
 
-**# Bookmark #1
-// US case study 
+//# US case study 
 * diet quality outcomes
 use NHANES_HEI_20172018, clear
 svyset sdmvpsu [pw=wtmec2yr], strata(sdmvstra)
@@ -148,14 +151,14 @@ esttab reg using "Table 1", replace wide rtf label nogaps se(%9.3f) star
 eststo meanhei: svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9 & indfmin2!=. & dmdeduc2!=.): mean hei
 esttab meanhei using "Table 1", append wide rtf label nogaps se(%9.3f) note("Note: Excludes those who refused to give income (N=86) or did not know (n=96) and those who refused to give education level (n=2) or did not know (n=6).")
 
-// Fig 2
+//# Fig 1
 lab def ed 1 "Less than 9th grade" 2 "9-12th (no diploma)" 3 "High school grad/GED/equiv" 4 "Some college or AA degree" 5 "College graduate or above", replace
 lab val dmdeduc2 ed
 
 graph box hei if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9 [pw=wtmec2yr], over(dmdeduc2) over(riagendr) asyvars title("Healthy Eating Index (HEI-2015) by Education Level and Sex", size(small) span) ytitle("HEI (0-100)", margin(5)) yline(51, lcolor(gray)) legend(size(small) col(2) symxsize(3)) 
-graph export "Fig 2.png", replace
+graph export "$myfiles$saveto\Fig 1.jpg", replace
 
-// Table 2
+//# Table 2
 gen colldeg=1 if dmdeduc2==5
 replace colldeg=0 if dmdeduc2<5
 eststo coll: svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9): logit colldeg b1.ridreth3 riagendr ridageyr i.inctopovquint, or
@@ -171,26 +174,7 @@ heatplot indfmpir i.dmdeduc2 i.ridreth3  if dmdeduc2!=7 & dmdeduc2!=9, xlabel(,a
 
 sum indfmpir
 
-// Fig 3
-
-use NHANES_HEI_20172018, clear
-epctile hei if ridageyr>=18 & hei!=. [pw=wtmec2yr], percentiles(50)
-graph box hei if ridageyr>=18 & hei!=. [pw=wtmec2yr], over(ridreth3) over(incpovratgrp, gap(*3)) asyvars legend(size(small) col(3) symxsize(3)) ytitle("Healthy Eating Index (HEI-2015)", size(small)) b1title("Ratio of household income to poverty line", size(small)) noouts note("") yline(51, lcolor(gray))
-graph export "Fig2.png", replace
-
-forval i=1/6 {
-	eststo r`i': svy, subpop(if ridageyr>=18 & hei!=. & incpovratgrp==`i'): regress hei i.ridreth3
-}
-esttab r1 r2 r3 r4 r5 r6 using "fig 2 regression", rtf replace label se(%9.3f) note("Mexican American is the reference group.")
-tab incpovratgrp
-
-recode ridreth3 (6=5) (7=6)
-forval i=1/6 {
-	eststo r`i': svy, subpop(if ridageyr>=18 & hei!=. & ridreth3==`i' & incpovratgrp!=.): regress hei i.incpovratgrp
-}
-esttab r1 r2 r3 r4 r5 r6 using "fig 2 regression2", rtf replace label se(%9.3f) note("<0.5 income-to-poverty ratio is the reference group.")
-
-// Supp Table 1 // NHANES summary statistics 
+//# Supp Table 1 // NHANES summary statistics 
 eststo sum1: estpost sum ridageyr dmdhhsiz dmdfmsiz dmdhhsza dmdhhszb dmdhhsze hei riagendr, listwise
 esttab sum1 using "Supp Table 1", replace rtf label wide nostar cells("mean(fmt(%9.2f)) count(fmt(%9.0f))") 
 eststo sum1a: estpost sum indfmpir, listwise
@@ -204,7 +188,7 @@ replace indfmin2=99 if indfmin2==. | indfmin2==77
 eststo sum5: estpost tab indfmin2 
 esttab sum5 using "Supp Table 1", append rtf label wide varlabels(`e(labels)') nostar cells("b(fmt(%9.0f)) pct(fmt(%9.2f))")
 
-// Supp Mat Table 2
+//# Supp Mat Table 2
 tab inctopovquint, nolabel
 replace inctopovquint=6 if inctopovquint==. // Missing
 tabout ridreth3 inctopovquint using "Supp Table 2.xls", replace

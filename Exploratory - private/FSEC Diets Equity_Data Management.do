@@ -11,7 +11,7 @@ cd "$outputs"
 
 * Create dataset
 // AHEI provided by IHME
-import delimited "$data/AHEI scores_GBD_Apr2021", clear
+import delimited "$data/GBD/AHEI scores_GBD_Apr2021", clear
 ren location country
 lab var country ""
 describe
@@ -28,7 +28,7 @@ drop agegroup
 save AHEI, replace
 
 // World Development Indicators
-import delimited "$data/World Dev Indicators", clear
+import delimited "$data/World Dev Indicators/World Dev Indicators", clear
 ren v1 country
 ren v2 iso
 ren v3 series

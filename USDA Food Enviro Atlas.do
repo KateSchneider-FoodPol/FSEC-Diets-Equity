@@ -1,12 +1,15 @@
 * Kate Schneider
-
+* Replication files for "Inequities in access to healthy diets" - NHANES
+* Figure 3
+* Supplementary table 4
 
 // Part 1 // Housekeeping
 * Working directory
-global myfiles "C:\Users\kates\OneDrive - Johns Hopkins\FSEC\Diets & equity\FSEC Diets & Equity Shared Folder"
-global analysis "\Analysis"
+global myfiles "C:\Users\Kate S\OneDrive - Johns Hopkins\FSEC\Diets & equity\FSEC Diets & Equity Shared Folder"
 global data "\Data\USDA Food Environment Atlas"
-cd "$myfiles"
+global analysis "\Analysis"
+global saveto "\Revised_Frontiers submission"
+cd "$myfiles$analysis"
 
 * Import and merge food atlas datasets all at state and county level
 import excel using "$myfiles$data\FoodEnvironmentAtlas", sheet("ACCESS") firstrow clear
@@ -348,14 +351,15 @@ drop _merge
 
 save "$myfiles$analysis\FSECDiets_USCountyLevelData", replace
 
-// PART 2 // PHYSICAL ACCESS
+//# Figure 3
+use "$myfiles$analysis\FSECDiets_USCountyLevelData", clear
 
 * Rural/urban classification 
 tab RUCC_2013
 tab RUCC_Description
 encode RUCC_Description, gen(RUCC)
 describe RUCC
-labellist RUCC
+label list RUCC
 
 * Low access to a store by urban/rural
 tabstat PCT_LACCESS_POP15, stats(min max mean p50 n)
@@ -364,8 +368,8 @@ tabstat PCT_LACCESS_POP15 if PCT_LACCESS_POP15>=95, stats(n)
 histogram PCT_LACCESS_POP15, freq ytitle(Number of counties) bcolor(gs9) graphregion(fcolor(gs16))
 graph export "$myfiles$analysis\Low access to store histogram.png", replace
 
-graph box PCT_LACCESS_POP15, yline(19.2, lcolor(cranberry)) over(RUCC, label(angle(45) labsize(vsmall)) relabel(1 "Urban >1m" 2 "Urban 250k-1m" 3 "Urban <250k" 4 "Rural peri-urban" 5 "Rural remote" 6 "Suburban small peri-urban" 7 "Suburban small remote" 8 "Suburban >20k peri-urban" 9 "Suburban >20k remote")) graphregion(fcolor(gs16)) box(1, fcolor(gs9) lcolor(black)) noouts note("")
-graph export "$myfiles$analysis\Low access to store by urban-rurual.png", replace
+graph box PCT_LACCESS_POP15, yline(19.2, lcolor(cranberry)) ytitle(, size(medsmall) margin(0 2 0 0)) over(RUCC, label(angle(45) labsize(vsmall)) relabel(1 "Urban >1m" 2 "Urban 250k-1m" 3 "Urban <250k" 4 "Rural peri-urban" 5 "Rural remote" 6 "Suburban small peri-urban" 7 "Suburban small remote" 8 "Suburban >20k peri-urban" 9 "Suburban >20k remote")) noouts note("") asyvars legend(size(small))
+graph export "$myfiles$saveto\Fig 3.jpg", replace
 	* Note for interpretation: outliers not displayed, red line indicates median 	over all counties of 19.2%
 	
 	* Number of counties per RUCC grouping:
