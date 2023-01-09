@@ -146,27 +146,40 @@ svyset sdmvpsu [pw=wtmec2yr], strata(sdmvstra)
 misstable sum riagendr ridageyr indfmpir inctopovquint ridreth3 dmdeduc2 indfmin2 anydisability hei fsdhh dmdhhsiz dmdfmsiz dmdhhsza dmdhhszb dmdhhsze 
 
 // Table 1 // Assocation with HEI
-eststo reg: svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9): regress hei riagendr ridageyr i.indfmin2  i.ridreth3 i.dmdeduc2 dmdfmsiz dmdhhsza dmdhhszb anydisability i.fsdhh
-esttab reg using "Table 1", replace wide rtf label nogaps se(%9.3f) star 
+* recode income
+recode indfmin2 (1=13) (2=13) (3=13) (4=13)
+recode indfmin2 (12 = 77) // recode "$20k and over" as refused, given the huge potential variation in this category -- METHODS NOTE (N=128)
+tab indfmin2
+describe indfmin2
+recode indfmin2 (13 = 1)
+lab def inc 1 "$20,000 and below", modify
+lab val indfmin2 inc
+eststo reg: svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9): regress hei riagendr ridageyr b6.indfmin2  b3.ridreth3 b5.dmdeduc2 dmdfmsiz dmdhhsza dmdhhszb anydisability i.fsdhh
+eststo reginteract: svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9): regress hei ridageyr b6.indfmin2  b3.ridreth3 b5.dmdeduc2 dmdfmsiz dmdhhsza dmdhhszb anydisability i.fsdhh ridreth3##riagendr
+esttab reg reginteract using "$myfiles$saveto\Table 1", replace wide rtf label nogaps se(%9.3f) star 
 eststo meanhei: svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9 & indfmin2!=. & dmdeduc2!=.): mean hei
-esttab meanhei using "Table 1", append wide rtf label nogaps se(%9.3f) note("Note: Excludes those who refused to give income (N=86) or did not know (n=96) and those who refused to give education level (n=2) or did not know (n=6).")
+esttab meanhei using "$myfiles$saveto\Table 1", append wide rtf label nogaps se(%9.3f) note("Note: Excludes those who refused to give income (N=86) or did not know (n=96) and those who refused to give education level (n=2) or did not know (n=6).")
 
-//# Fig 1
+//# Fig 2
 lab def ed 1 "Less than 9th grade" 2 "9-12th (no diploma)" 3 "High school grad/GED/equiv" 4 "Some college or AA degree" 5 "College graduate or above", replace
 lab val dmdeduc2 ed
 
-graph box hei if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9 [pw=wtmec2yr], over(dmdeduc2) over(riagendr) asyvars title("Healthy Eating Index (HEI-2015) by Education Level and Sex", size(small) span) ytitle("HEI (0-100)", margin(5)) yline(51, lcolor(gray)) legend(size(small) col(2) symxsize(3)) 
-graph export "$myfiles$saveto\Fig 1.jpg", replace
+graph box hei if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9 [pw=wtmec2yr], over(dmdeduc2) over(riagendr) asyvars ytitle("HEI (0-100)", margin(5)) yline(51, lcolor(gray)) legend(size(small) col(2) symxsize(3)) 
+graph export "$myfiles$saveto\Fig 2-final.jpg", replace
 
-//# Table 2
+//# Table 2 
+
 gen colldeg=1 if dmdeduc2==5
 replace colldeg=0 if dmdeduc2<5
-eststo coll: svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9): logit colldeg b1.ridreth3 riagendr ridageyr i.inctopovquint, or
+eststo coll: svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9): logit colldeg b1.ridreth3 i.inctopovquint riagendr ridageyr, or
 
 gen foodinsecure=1 if inlist(fsdhh,2,3,4)
 replace foodinsecure=0 if fsdhh==1
-eststo fi: svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9): logit foodinsecure b1.ridreth3 riagendr ridageyr i.inctopovquint, or
-esttab coll fi using "Table 2", replace wide rtf label nogaps se(%9.3f) star eform mlabels("College Degree" "Experience Food Insecurity") 
+eststo fi: svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9): logit foodinsecure b1.ridreth3 i.inctopovquint i.dmdeduc2 riagendr ridageyr , or
+	* Linear regression to assess explanatory power of the independent variables:
+	svy, subpop(if indfmin2!=77 & indfmin2!=99 & dmdeduc2!=7 & dmdeduc2!=9): reg foodinsecure b1.ridreth3 i.inctopovquint i.dmdeduc2 riagendr ridageyr
+
+esttab coll fi using "$myfiles$saveto\Table 2", replace wide rtf label nogaps se(%9.3f) star eform mlabels("College Degree" "Experience Food Insecurity") 
 
 
 // Show how income, education, and race/ethnicity are highly correlated
